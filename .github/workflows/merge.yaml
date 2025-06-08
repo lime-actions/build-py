@@ -1,0 +1,48 @@
+name: Merge
+run-name: Merging ${{ github.event.pull_request.head.ref }} -> ${{ github.event.pull_request.base.ref }}
+
+on:
+  pull_request_review:
+    types:
+    - submitted
+    paths:
+    - version.txt
+
+jobs:
+  merge:
+    if: ${{ github.event.review.state == 'approved' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        fetch-tags: true
+        sparse-checkout: |
+          version.txt
+          .github/actions/merge/action.yaml
+        sparse-checkout-cone-mode: false
+    - name: Merge
+      uses: lime-actions/merge@latest
+      with:
+        # paths: '(action.yaml)|(README.md)'
+        version-from: 'version-file'
+    - name: Merge back
+      if: github.event.pull_request.base.ref
+          == github.event.repository.default_branch
+      run: |
+        git config user.name GitHub Actions
+        git config user.email github-actions@users.noreply.github.com
+
+        git fetch
+
+        git checkout release-candidate
+        git merge origin/${{ github.event.pull_request.base.ref }} -X ours
+        git push
+
+        git checkout dev
+        git merge origin/release-candidate
+        git push
