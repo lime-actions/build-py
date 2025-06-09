@@ -33,7 +33,7 @@ jobs:
       with:
         build-number: true
     - name: Release candidate
-      id: build-number
+      id: release-candidate
       uses: ./
       with:
         release-candidate: '1'
