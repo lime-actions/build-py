@@ -1,0 +1,38 @@
+name: Build
+description: Build and publish python package
+
+inputs:
+  build:
+    description: Whether to run build to finish
+    required: false
+    default: 'true'
+  build-number:
+    description: Whether to append a build number
+    required: false
+    default: 'true'
+  release-candidate:
+    description: What release candidate number to append.
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+  - name: Install uv
+    uses: astral-sh/setup-uv@v6
+    with:
+      enable-cache: true
+  - name: "Set up Python"
+    uses: actions/setup-python@v5
+    with:
+      python-version-file: 'pyproject.toml'
+  - name: Install dependencies and build
+    run: |
+      uv sync --no-default-groups --group build
+      uv tool install limedev[package]
+      uv tool run limedev package
+        ${{ inputs.build == 'true' && '--build' || '' }}
+        ${{ inputs.build-number != 'true' && '--build-number' || '' }}
+        ${{ inputs.release-candidate
+            && format('--release-candidate={0}', inputs.release-candidate)
+            || ''}}

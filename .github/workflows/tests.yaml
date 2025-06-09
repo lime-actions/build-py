@@ -1,0 +1,39 @@
+name: Tests
+run-name: Testing the action
+on:
+  push:
+    paths:
+    - 'action.yaml'
+    - '.github/workflows/tests.yaml'
+    - 'src/*'
+    - 'pyproject.toml'
+
+jobs:
+  Tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          action.yaml
+          pyproject.toml
+          src/
+        sparse-checkout-cone-mode: false
+    - name: Build
+      id: build
+      uses: ./
+      with:
+        build: true
+    - name: Build number
+      id: build-number
+      uses: ./
+      with:
+        build-number: true
+    - name: Release candidate
+      id: build-number
+      uses: ./
+      with:
+        release-candidate: '1'
