@@ -17,3 +17,17 @@ sandbox
 ## Pre-commit
 
 !.pre-commit-config.yaml
+
+# Python
+
+__pycache__
+
+## Distribution / packaging
+
+*.egg-info
+dist/
+build/
+
+## UV
+
+uv.lock
