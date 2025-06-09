@@ -41,5 +41,4 @@ dev = [
     { include-group = "build" },
 ]
 build = [
-    "limedev[package]",
 ]

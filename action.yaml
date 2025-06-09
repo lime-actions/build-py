@@ -29,10 +29,8 @@ runs:
   - name: Install dependencies and build
     shell: bash
     run: |
-      uv tool install limeinstall
       uv tool install limedev[package]
-      uv tool run limeinstall build
-      limedev package
+      uv tool run limedev package
         ${{ inputs.build == 'true' && '--build' || '' }}
         ${{ inputs.build-number != 'true' && '--build-number' || '' }}
         ${{ inputs.release-candidate
