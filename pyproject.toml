@@ -37,3 +37,12 @@ limepackage = "limepackage._cli:main"
 Homepage = "https://github.com/lime-actions/build-py"
 Changelog = "https://github.com/lime-actions/build-py/blob/main/README.md#Changelog"
 "Issue Tracker" = "https://github.com/lime-actions/build-py/issues"
+
+[dependency-groups]
+dev = [
+    "pre-commit >= 3.2.2,<4",
+    { include-group = "build" },
+]
+build = [
+    "limedev[package]",
+]
