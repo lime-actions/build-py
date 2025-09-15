@@ -1,0 +1,65 @@
+name: Test
+description: Run unittests
+
+inputs:
+  python-version:
+    description: Python version to use
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+  - name: Install uv
+    uses: astral-sh/setup-uv@v6
+    with:
+      enable-cache: true
+  - name: Set up Python
+    uses: actions/setup-python@v5
+    with:
+      allow-prereleases: True
+      python-version: ${{ inputs.python-version }}
+      python-version-file: ${{ !inputs.python-version && 'pyproject.toml' || '' }}
+
+  - name: Install and run the tests
+    shell: bash
+    run: |
+      echo "::group::Installing the package"
+      uv sync --all-extras --no-default-groups \
+        --group unittests --group typing
+      echo "::endgroup::"
+
+      echo "::group::Installing tester"
+      uv pip install limedev[unittesting,typing]
+      echo "::endgroup::"
+
+  - name: Run tests | Windows
+    if: runner.os == 'Windows'
+    shell: powershell
+    run: |
+      .\.venv\Scripts\activate.ps1
+
+      echo "::group::Running tests"
+      limedev typecheck
+      limedev unittest
+      echo "::endgroup::"
+
+  - name: Run tests | Linux & MacOS
+    if: runner.os == 'Linux' || runner.os == 'macOS'
+    shell: bash
+    run: |
+      . ./.venv/bin/activate
+
+      echo "::group::Running tests"
+      limedev typecheck
+      limedev unittest
+      echo "::endgroup::"
+
+  - name: Unsupported OS
+    if: runner.os != 'Windows'
+        && runner.os != 'Linux'
+        && runner.os != 'macOS'
+    shell: bash
+    run: |
+      echo "$RUNNER_OS is unsupported"
+      exit 101

@@ -1,0 +1,31 @@
+name: Packaging test
+run-name: Packaging test
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - release-candidate
+    paths:
+      - .github/workflows/test-packaging.yaml
+      - .github/actions/package/action.yaml
+      - dependencies/*
+      - readme/*
+      - src/*
+      - LICENSE.txt
+      - pyproject.toml
+
+jobs:
+  packaging:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    uses: ./.github/workflows/package.yaml
+    with:
+      pre-release: true
+
+  checks:
+    needs: packaging
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checks
+      run: |
+        echo 'test'

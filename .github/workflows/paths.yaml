@@ -1,0 +1,98 @@
+
+on:
+  workflow_call:
+    inputs:
+      before:
+        description: SHA hash before synchronisation
+        required: false
+        type: string
+        default: ${{ github.event.pull_request.before}}
+      after:
+        description: SHA has after synchronisation
+        required: false
+        type: string
+        default: ${{ github.event.pull_request.before}}
+      paths:
+        description: 'Regex pattern to match changed file paths'
+        type: string
+        required: true
+      commits:
+        description: Number of commits between before and after
+        required: false
+        type: string
+        default: ${{ github.event.pull_request.commits }}
+    outputs:
+      matches:
+        description: '"true" if matches, else empty string.'
+        value: ${{ jobs.match-files.outputs.matches }}
+
+permissions:
+  contents: read
+
+jobs:
+  match-files:
+    runs-on: ubuntu-latest
+    outputs:
+      matches: ${{ steps.paths.outputs.matches
+                   || steps.paths-fallback.outputs.matches }}
+    steps:
+    - name: Checkout PR code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: ${{ inputs.commits }}  # So we can compare changes
+    - name: Count matching paths
+      id: paths
+      env:
+        PATTERNS: ${{ inputs.paths }}
+      run: |
+        echo "$PATTERNS"
+        echo "::group::Diff"
+        PATHS="$(git diff ${{ inputs.before }} ${{ inputs.after }} --name-only)"
+        echo "::endgroup::"
+
+        if [ -z "$PATHS" ]; then
+          echo "failed=x" >> "$GITHUB_OUTPUT"
+        else
+          echo "::group::Matching paths"
+          while read -r path; do
+            while read -r pattern; do
+              if [[ $path == $pattern ]]; then
+                echo $path
+                echo $pattern
+                echo "matches=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            done < <(printf '%s\n' "$PATTERNS")
+          done <<< "$PATHS"
+
+          echo "::endgroup::"
+        fi
+    - name: Retry checkout with fetching all
+      if: steps.paths.outputs.failed
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # So we can compare changes
+    - name: Count matching paths
+      id: paths-fallback
+      if: steps.paths.outputs.failed
+      env:
+        PATTERNS: ${{ inputs.paths }}
+      run: |
+
+        echo "::group::Diff"
+        PATHS="$(git diff ${{ inputs.before }} ${{ inputs.after }} --name-only)"
+        echo "::endgroup::"
+
+        echo "::group::Matching paths"
+        while read -r path; do
+            while read -r pattern; do
+              if [[ $path == $pattern ]]; then
+                echo $path
+                echo $pattern
+                echo "matches=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            done < <(printf '%s\n' "$PATTERNS")
+          done <<< "$PATHS"
+        >> "$GITHUB_OUTPUT"
+        echo "::endgroup::"

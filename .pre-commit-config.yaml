@@ -1,11 +1,49 @@
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
   - id: check-case-conflict
+  - id: check-illegal-windows-names
   - id: check-toml
   - id: check-yaml
+  - id: double-quote-string-fixer
   - id: end-of-file-fixer
   - id: no-commit-to-branch
     name: No commits to main or master branch
+  - id: requirements-txt-fixer
   - id: trailing-whitespace
+- repo: https://github.com/asottile/reorder_python_imports
+  rev: v3.15.0
+  hooks:
+  - id: reorder-python-imports
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.17.1
+  hooks:
+  - id: mypy
+    name: Static type check
+    args:
+    - --config-file=tests/mypy.ini
+    - --no-warn-unused-ignores
+    - --explicit-package-bases
+    exclude: 'mypy_experiments.py'
+    additional_dependencies:
+    - mypy-extensions == 1.0.0
+    - types-PyYAML == 6.0.12.12
+    - types-requests == 2.31.0.8
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.12.10
+  hooks:
+  - id: ruff
+    args: [ --fix ]
+- repo: https://github.com/DanielNoord/pydocstringformatter
+  rev: v0.7.5
+  hooks:
+    - id: pydocstringformatter
+      name: Docstring formatting
+      args:
+      - --max-line-length=73
+      - --linewrap-full-docstring
+- repo: https://github.com/rhysd/actionlint
+  rev: v1.7.7
+  hooks:
+  - id: actionlint

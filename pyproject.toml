@@ -1,9 +1,3 @@
-[build-system]
-requires = [
-    "setuptools>=64.0",
-]
-build-backend = "setuptools.build_meta"
-
 [project]
 authors = [
     { name = "Limespy" },
@@ -21,24 +15,65 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
 ]
+dynamic = [
+    "dependencies",
+    "optional-dependencies",
+]
 license = "MIT"
 license-files = [
     "LICENSE.txt",
 ]
-name = "build-py"
-requires-python = ">=3.10"
+name = "limepackage"
+requires-python = ">=3.12"
 readme = "README.md"
 version = "0.1.0"
+
+[project.scripts]
+limepackage = 'limepackage._cli:main'
+
 
 [project.urls]
 Homepage = "https://github.com/lime-actions/build-py"
 Changelog = "https://github.com/lime-actions/build-py/blob/main/README.md#Changelog"
 "Issue Tracker" = "https://github.com/lime-actions/build-py/issues"
 
+[build-system]
+requires = [
+    "setuptools",
+]
+build-backend = "setuptools.build_meta"
+
 [dependency-groups]
 dev = [
-    "pre-commit >= 3.2.2,<4",
-    { include-group = "build" },
+    "pre-commit >= 4",
+    { include-group = "linting" },
+    { include-group = "packaging" },
+    { include-group = "tox" },
+    { include-group = "typing" },
+    { include-group = "unittests" },
 ]
-build = [
+
+linting = [
+    "limedev[linting]",
+]
+packaging = [
+    "limedev[readme]",
+]
+tox = [
+    "tox >= 4.22",
+    "tox-uv >= 1.25.0",
+]
+typing = [
+    "limedev[typing-mypy]",
+]
+unittests = [
+    "limedev[unittesting]",
+]
+
+[tool.limedev]
+full_name = "LimePackage"
+
+[tool.setuptools.dynamic.dependencies]
+file = [
+    "dependencies/requirements.txt",
 ]
