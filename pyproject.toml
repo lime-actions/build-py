@@ -70,6 +70,12 @@ unittests = [
     "limedev[unittesting]",
 ]
 
+[tool.black]
+line-length = 80
+preview = true
+skip-string-normalization = true
+
+
 [tool.limedev]
 full_name = "LimePackage"
 
