@@ -5,12 +5,82 @@ on:
   pull_request_review:
     types:
     - submitted
-    paths:
-    - version.txt
+
+permissions:
+  contents: read
 
 jobs:
+  not-draft:
+    if: github.event.review.state == 'approved'
+        && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+    - name: Pass
+      run: exit 0
+
+  paths:
+    needs: not-draft
+    if: github.event.review.state == 'approved'
+    uses: ./.github/workflows/paths.yaml
+    with:
+      paths: |
+        src
+        tests
+        ./.github/workflows/test-functional.yaml
+        action.yaml
+      before: ${{ github.event.pull_request.base.sha }}
+      after: ${{ github.event.pull_request.head.sha }}
+      commits: '0'
+
+  tests:
+    needs: paths
+    if: needs.paths.outputs.matches
+    uses: ./.github/workflows/test-functional.yaml
+
+  package:
+    needs: tests
+    if: always()
+        && ( needs.tests.result == 'success'
+             || needs.tests.result == 'skipped'
+             && (github.event.pull_request.base.ref
+                 == github.event.repository.default_branch
+                 || github.event.pull_request.base.ref
+                 == 'release-candidate'))
+    uses: ./.github/workflows/package.yaml
+    with:
+        build-number: ${{ github.event.pull_request.base.ref
+                          != github.event.repository.default_branch}}
+
+  publish:
+    needs: package
+    if: always() && (needs.package.result == 'success')
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+    - name: Retrieve release distributions
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ needs.package.outputs.dists-name }}
+        path: dist/
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.12.4
+      with:
+        repository-url: |
+          https://${{ github.event.pull_request.base.ref
+                      != github.event.repository.default_branch
+                      && 'test' || 'upload'
+                      }}.pypi.org/legacy/
+
   merge:
-    if: ${{ github.event.review.state == 'approved' }}
+    needs:
+    - tests
+    - publish
+    if: always()
+        && (needs.publish.result == 'success'
+            || needs.publish.result == 'skipped'
+            && (needs.tests.result == 'success'
+                || needs.publish.result == 'skipped'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -22,20 +92,19 @@ jobs:
         fetch-depth: 0
         fetch-tags: true
         sparse-checkout: |
-          version.txt
-          .github/actions/merge/action.yaml
+          pyproject.toml
         sparse-checkout-cone-mode: false
     - name: Merge
       uses: lime-actions/merge@latest
       with:
-        # paths: '(action.yaml)|(README.md)'
-        version-from: 'version-file'
+        version-from: 'pyproject.toml'
+        merge-mode-other: merge
     - name: Merge back
       if: github.event.pull_request.base.ref
           == github.event.repository.default_branch
       run: |
-        git config user.name GitHub Actions
-        git config user.email github-actions@users.noreply.github.com
+        git config user.name "GitHub Actions"
+        git config user.email "github-actions@users.noreply.github.com"
 
         git fetch
 
@@ -44,5 +113,5 @@ jobs:
         git push
 
         git checkout dev
-        git merge origin/release-candidate
+        git merge release-candidate -X ours
         git push

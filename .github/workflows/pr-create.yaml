@@ -6,8 +6,7 @@ on:
 
 jobs:
   create-pr:
-    if: github.event_name == 'workflow_call'
-        || inputs.head != github.event.repository.default_branch
+    if: github.ref_name != github.event.repository.default_branch
     runs-on: ubuntu-latest
     permissions:
        pull-requests: write
@@ -17,9 +16,9 @@ jobs:
       uses: actions/checkout@v4
       with:
         sparse-checkout: |
-          version.txt
+          pyproject.toml
         sparse-checkout-cone-mode: false
     - name: Create PR from ${{ github.ref_name }}
       uses: lime-actions/pr-sync@latest
       with:
-        version-from: 'version-file'
+        version-from: 'pyproject.toml'

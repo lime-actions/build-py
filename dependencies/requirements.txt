@@ -1,3 +1,4 @@
-limedev >= 0.6
-tomli >= 2.0.1 ; python_version < '3.11'
+pip >= 25
 tomli-w >= 1.0.0
+uv >= 0.8
+wheel >= 0.38

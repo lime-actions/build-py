@@ -1,0 +1,71 @@
+name: Functional tests
+run-name: Functional tests
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - release-candidate
+    paths:
+      - pyproject.toml
+      - src/*
+      - readme/*
+      - tests/*
+      - .github/workflows/test-functional.yaml
+  workflow_call:
+
+jobs:
+  python-versions:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          pyproject.toml
+          tox.ini
+        sparse-checkout-cone-mode: false
+    - name: Python versions
+      id: strict-versions
+      uses: lime-actions/python-version-range@latest
+      with:
+        include-prereleases: true
+    - name: Loosen requirements
+      id: versions
+      run: |
+        echo "max=$(grep -oE "^[0-9]+\.[0-9]+" \
+                    <<< "${{ steps.strict-versions.outputs.max }}")" \
+        >> "$GITHUB_OUTPUT"
+
+        echo "min=$(grep -oE "^[0-9]+\.[0-9]+" \
+                    <<< "${{ steps.strict-versions.outputs.min }}")" \
+        >> "$GITHUB_OUTPUT"
+    outputs:
+      max: ${{ steps.versions.outputs.max }}
+      min: ${{ steps.versions.outputs.min }}
+
+  tests:
+    needs: python-versions
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        python-version:
+          - ${{ needs.python-versions.outputs.max }}
+          - ${{ needs.python-versions.outputs.min }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          .github/actions/test/action.yaml
+          pyproject.toml
+          dependencies/
+          readme/
+          src/
+          tests/
+        sparse-checkout-cone-mode: false
+    - name: Run tests
+      uses: ./.github/actions/test
+      with:
+        python-version: ${{ matrix.python-version }}

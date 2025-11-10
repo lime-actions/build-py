@@ -1,8 +1,3 @@
-[![PyPI Package latest release](https://img.shields.io/pypi/v/limepackage.svg)][1]
-[![PyPI Wheel](https://img.shields.io/pypi/wheel/limepackage.svg)][1]
-[![Supported versions](https://img.shields.io/pypi/pyversions/limepackage.svg)][1]
-[![Supported implementations](https://img.shields.io/pypi/implementation/limepackage.svg)][1]
-
 # LimePackage <!-- omit in toc -->
 
 LimePackage is collection tools for Python development. These tools are more or less thin wrappers around other packages.
@@ -10,9 +5,9 @@ LimePackage is collection tools for Python development. These tools are more or 
 ## Table of Contents <!-- omit in toc -->
 
 - [Quick start guide](#quick-start-guide)
-    - [The first steps](#the-first-steps)
-        - [Installing](#installing)
-        - [Importing](#importing)
+  - [The first steps](#the-first-steps)
+    - [Installing](#installing)
+    - [Importing](#importing)
 
 # Quick start guide
 

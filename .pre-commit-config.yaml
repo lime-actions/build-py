@@ -1,11 +1,45 @@
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
   - id: check-case-conflict
+  - id: check-illegal-windows-names
   - id: check-toml
   - id: check-yaml
+  - id: double-quote-string-fixer
   - id: end-of-file-fixer
   - id: no-commit-to-branch
     name: No commits to main or master branch
+  - id: requirements-txt-fixer
   - id: trailing-whitespace
+- repo: https://github.com/wimglenn/reorder-python-imports-black
+  rev: v3.14.0
+  hooks:
+  - id: reorder-python-imports
+    name: Reorder Python imports
+    args:
+    - --py313-plus
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.18.2
+  hooks:
+  - id: mypy
+    name: Python type check
+    args:
+    - --config-file=tests/mypy.ini
+    - --no-warn-unused-ignores
+    - --explicit-package-bases
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.14.4
+  hooks:
+  - id: ruff
+    name: Python linter/fixer
+    args: [ --fix ]
+- repo: https://github.com/psf/black-pre-commit-mirror
+  rev: 25.9.0
+  hooks:
+  -  id: black
+     name: Python formatter
+- repo: https://github.com/rhysd/actionlint
+  rev: v1.7.8
+  hooks:
+  - id: actionlint
